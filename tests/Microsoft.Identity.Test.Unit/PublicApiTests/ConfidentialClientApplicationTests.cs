@@ -170,7 +170,8 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
             {
                 httpManager.AddInstanceDiscoveryMockHandler();
 
-                var app = ConfidentialClientApplicationBuilder.Create(TestConstants.ClientId)
+                ConfidentialClientApplication app = 
+                    ConfidentialClientApplicationBuilder.Create(TestConstants.ClientId)
                                                               .WithClientSecret(TestConstants.ClientSecret)
                                                               .WithHttpManager(httpManager)
                                                               .BuildConcrete();
@@ -182,15 +183,20 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
                     .ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
                 Assert.AreEqual(app.AppTokenCacheInternal.Accessor.GetAllAccessTokens().Single().TenantId, TestConstants.Utid);
+                Assert.AreEqual(1, app.InMemoryPartitionedCacheSerializer.CachePartition.Count);
+                Assert.IsTrue(app.InMemoryPartitionedCacheSerializer.CachePartition.Keys.Single().Contains(TestConstants.Utid));
 
                 httpManager.AddMockHandlerSuccessfulClientCredentialTokenResponseMessage();
 
                 result = await app.AcquireTokenForClient(TestConstants.s_scope.ToArray())
                     .WithAuthority(TestConstants.AuthorityUtid2Tenant)
                     .ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-
-                Assert.AreEqual(2, app.AppTokenCacheInternal.Accessor.GetAllAccessTokens().Count());
+                
                 Assert.IsNotNull(app.AppTokenCacheInternal.Accessor.GetAllAccessTokens().Single(at => at.TenantId == TestConstants.Utid2));
+                Assert.AreEqual(2, app.InMemoryPartitionedCacheSerializer.CachePartition.Count);
+                Assert.IsTrue(app.InMemoryPartitionedCacheSerializer.CachePartition.Keys.Any(k => k.Contains(TestConstants.Utid)));
+                Assert.IsTrue(app.InMemoryPartitionedCacheSerializer.CachePartition.Keys.Any(k => k.Contains(TestConstants.Utid2)));
+
             }
         }
 
@@ -786,12 +792,7 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
                     .WithHttpManager(httpManager)
                     .BuildConcrete();
 
-                _tokenCacheHelper.PopulateCacheForClientCredential(app.AppTokenCacheInternal.Accessor);
-
-                var accessTokens = await app.AppTokenCacheInternal.GetAllAccessTokensAsync(true).ConfigureAwait(false);
-                var accessTokenInCache = accessTokens
-                                         .Where(item => ScopeHelper.ScopeContains(item.ScopeSet, TestConstants.s_scope))
-                                         .ToList().FirstOrDefault();
+                _tokenCacheHelper.PopulateDefaultAppTokenCache(app);
 
                 // Don't add mock to fail in case of network call
                 // If there's a network call by mistake, then there won't be a proper number
@@ -802,6 +803,11 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
                     .WithForceRefresh(false)
                     .ExecuteAsync(CancellationToken.None)
                     .ConfigureAwait(false);
+
+                var accessTokens = await app.AppTokenCacheInternal.GetAllAccessTokensAsync(true).ConfigureAwait(false);
+                var accessTokenInCache = accessTokens
+                                         .Where(item => ScopeHelper.ScopeContains(item.ScopeSet, TestConstants.s_scope))
+                                         .ToList().FirstOrDefault();
 
                 Assert.AreEqual(accessTokenInCache.Secret, result.AccessToken);
             }

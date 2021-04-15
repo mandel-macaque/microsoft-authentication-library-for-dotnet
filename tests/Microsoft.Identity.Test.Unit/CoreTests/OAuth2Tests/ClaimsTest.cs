@@ -64,7 +64,6 @@ namespace Microsoft.Identity.Test.Unit.CoreTests.OAuth2Tests
         public async Task AcquireTokenForClient_BypassesCacheForAccessTokens_IfClaimsUsed_Async()
         {
             // Arrange
-            // Arrange
             using (MockHttpAndServiceBundle harness = base.CreateTestHarness())
             {
                 Trace.WriteLine("1. Setup an app with a token cache with one AT");
@@ -75,7 +74,7 @@ namespace Microsoft.Identity.Test.Unit.CoreTests.OAuth2Tests
                                                            .BuildConcrete();
 
                 var tokenCacheHelper = new TokenCacheHelper();
-                tokenCacheHelper.PopulateCache(app.AppTokenCacheInternal.Accessor, addSecondAt: false);
+                tokenCacheHelper.PopulateDefaultAppTokenCache(app);
 
                 Trace.WriteLine("2. AcquireTokenForClient returns from the cache ");
                 AuthenticationResult result = await app.AcquireTokenForClient(TestConstants.s_scope)
