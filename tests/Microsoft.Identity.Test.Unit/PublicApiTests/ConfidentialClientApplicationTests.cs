@@ -35,13 +35,11 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
     public class ConfidentialClientApplicationTests
     {
         private byte[] _serializedCache;
-        private TokenCacheHelper _tokenCacheHelper;
 
         [TestInitialize]
         public void TestInitialize()
         {
             TestCommon.ResetInternalStaticCaches();
-            _tokenCacheHelper = new TokenCacheHelper();
         }
 
         [TestMethod]
@@ -201,8 +199,47 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
         }
 
         [TestMethod]
+        public async Task ClientCreds_DefaultSerialization_Async()
+        {
+            using (var httpManager = new MockHttpManager())
+            {                
+                httpManager.AddInstanceDiscoveryMockHandler();
+
+                ConfidentialClientApplication app =
+                    ConfidentialClientApplicationBuilder.Create(TestConstants.ClientId)
+                                                              .WithClientSecret(TestConstants.ClientSecret)
+                                                              .WithHttpManager(httpManager)
+                                                              .BuildConcrete();
+
+                httpManager.AddMockHandlerSuccessfulClientCredentialTokenResponseMessage();
+
+                // Will use the partitioned dictionary for token 
+                var result = await app.AcquireTokenForClient(TestConstants.s_scope.ToArray())
+                    .WithAuthority(TestConstants.AuthorityUtidTenant)
+                    .ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+
+                Assert.AreEqual(app.AppTokenCacheInternal.Accessor.GetAllAccessTokens().Single().TenantId, TestConstants.Utid);
+                Assert.AreEqual(1, app.InMemoryPartitionedCacheSerializer.CachePartition.Count);
+                Assert.IsTrue(app.InMemoryPartitionedCacheSerializer.CachePartition.Keys.Single().Contains(TestConstants.Utid));
+
+                // memory cache should no longer be used
+                InMemoryTokenCache inMemoryTokenCache = new InMemoryTokenCache();
+                inMemoryTokenCache.Bind(app.AppTokenCache);
+
+                httpManager.AddMockHandlerSuccessfulClientCredentialTokenResponseMessage();
+
+                result = await app.AcquireTokenForClient(TestConstants.s_scope.ToArray())
+                    .WithAuthority(TestConstants.AuthorityUtidTenant)
+                    .ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+
+                Assert.IsTrue(result.AuthenticationResultMetadata.TokenSource == TokenSource.IdentityProvider);
+                Assert.AreEqual(app.AppTokenCacheInternal.Accessor.GetAllAccessTokens().Single().TenantId, TestConstants.Utid);
+            }
+        }
+
+        [TestMethod]
         [WorkItem(1403)] // https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/issues/1403
-        public async Task FooAsync()
+        public async Task DefaultScopesForS2SAsync()
         {
             using (var httpManager = new MockHttpManager())
             {
@@ -792,7 +829,7 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
                     .WithHttpManager(httpManager)
                     .BuildConcrete();
 
-                _tokenCacheHelper.PopulateDefaultAppTokenCache(app);
+                TokenCacheHelper.PopulateDefaultAppTokenCache(app);
 
                 // Don't add mock to fail in case of network call
                 // If there's a network call by mistake, then there won't be a proper number
@@ -831,7 +868,7 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
                     .WithTelemetry(receiver.HandleTelemetryEvents)
                     .BuildConcrete();
 
-                _tokenCacheHelper.PopulateCache(app.AppTokenCacheInternal.Accessor);
+                TokenCacheHelper.PopulateCache(app.AppTokenCacheInternal.Accessor);
 
                 // add mock response for successful token retrieval
                 const string TokenRetrievedFromNetCall = "token retrieved from network call";

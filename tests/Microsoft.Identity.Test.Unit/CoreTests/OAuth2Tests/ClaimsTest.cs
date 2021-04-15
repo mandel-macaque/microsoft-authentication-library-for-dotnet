@@ -35,8 +35,8 @@ namespace Microsoft.Identity.Test.Unit.CoreTests.OAuth2Tests
                                                                             .WithHttpManager(harness.HttpManager)
                                                                             .BuildConcrete();
 
-                var tokenCacheHelper = new TokenCacheHelper();
-                tokenCacheHelper.PopulateCache(app.UserTokenCacheInternal.Accessor, addSecondAt: false);
+                
+                TokenCacheHelper.PopulateCache(app.UserTokenCacheInternal.Accessor, addSecondAt: false);
 
                 Trace.WriteLine("2. Silent Request without claims returns the AT from the cache");
                 var account = (await app.GetAccountsAsync().ConfigureAwait(false)).Single();
@@ -73,8 +73,7 @@ namespace Microsoft.Identity.Test.Unit.CoreTests.OAuth2Tests
                                                            .WithHttpManager(harness.HttpManager)
                                                            .BuildConcrete();
 
-                var tokenCacheHelper = new TokenCacheHelper();
-                tokenCacheHelper.PopulateDefaultAppTokenCache(app);
+                TokenCacheHelper.PopulateDefaultAppTokenCache(app);
 
                 Trace.WriteLine("2. AcquireTokenForClient returns from the cache ");
                 AuthenticationResult result = await app.AcquireTokenForClient(TestConstants.s_scope)
@@ -117,8 +116,7 @@ namespace Microsoft.Identity.Test.Unit.CoreTests.OAuth2Tests
                                                                             .WithClientCapabilities(TestConstants.ClientCapabilities)
                                                                             .BuildConcrete();
 
-                var tokenCacheHelper = new TokenCacheHelper();
-                tokenCacheHelper.PopulateCache(app.UserTokenCacheInternal.Accessor, addSecondAt: false);
+                TokenCacheHelper.PopulateCache(app.UserTokenCacheInternal.Accessor, addSecondAt: false);
 
                 Trace.WriteLine("2. Silent Request returns the AT from the cache");
                 var account = (await app.GetAccountsAsync().ConfigureAwait(false)).Single();

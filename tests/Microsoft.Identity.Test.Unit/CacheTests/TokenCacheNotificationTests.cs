@@ -32,8 +32,7 @@ namespace Microsoft.Identity.Test.Unit.CacheTests
                     .WithHttpManager(harness.HttpManager)
                     .BuildConcrete();
 
-                var tokenCacheHelper = new TokenCacheHelper();
-                tokenCacheHelper.PopulateCache(pca.UserTokenCacheInternal.Accessor, addSecondAt: false);
+                TokenCacheHelper.PopulateCache(pca.UserTokenCacheInternal.Accessor, addSecondAt: false);
                 var account = (await pca.GetAccountsAsync().ConfigureAwait(false)).First();
 
                 // All these actions trigger a reloading of the cache

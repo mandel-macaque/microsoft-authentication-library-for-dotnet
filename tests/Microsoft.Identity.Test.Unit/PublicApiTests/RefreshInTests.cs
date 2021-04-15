@@ -80,8 +80,7 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
                                                                         .WithHttpManager(harness.HttpManager)
                                                                         .BuildConcrete();
 
-            var tokenCacheHelper = new TokenCacheHelper();
-            tokenCacheHelper.PopulateCache(app.UserTokenCacheInternal.Accessor, addSecondAt: false);
+            TokenCacheHelper.PopulateCache(app.UserTokenCacheInternal.Accessor, addSecondAt: false);
             return app;
         }
 
@@ -213,10 +212,9 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
                 ConfidentialClientApplication app = SetupCca(harness);
                 
                 Trace.WriteLine("2. Configure AT so that it shows it needs to be refreshed");
-                TokenCacheHelper tokenCacheHelper = new TokenCacheHelper();
                 MsalAccessTokenCacheItem atItem = TokenCacheHelper.CreateAccessTokenItem();
                 UpdateATWithRefreshOn(atItem, DateTime.UtcNow - TimeSpan.FromMinutes(1));
-                tokenCacheHelper.PopulateDefaultAppTokenCache(app, atItem);
+                TokenCacheHelper.PopulateDefaultAppTokenCache(app, atItem);
 
                 TokenCacheAccessRecorder cacheAccess = app.AppTokenCache.RecordAccess();
 
@@ -276,8 +274,7 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
                                                           .WithHttpManager(harness.HttpManager)
                                                           .BuildConcrete();
 
-            var tokenCacheHelper = new TokenCacheHelper();
-            tokenCacheHelper.PopulateCache(app.UserTokenCacheInternal.Accessor, addSecondAt: false, userAssertion: TestConstants.UserAssertion);
+            TokenCacheHelper.PopulateCache(app.UserTokenCacheInternal.Accessor, addSecondAt: false, userAssertion: TestConstants.UserAssertion);
             return app;
         }
 
@@ -293,10 +290,9 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
 
                 Trace.WriteLine("2. Configure AT so that it shows it needs to be refreshed");
 
-                TokenCacheHelper tokenCacheHelper = new TokenCacheHelper();
                 MsalAccessTokenCacheItem atItem = TokenCacheHelper.CreateAccessTokenItem();
                 UpdateATWithRefreshOn(atItem, DateTime.UtcNow - TimeSpan.FromMinutes(1));
-                tokenCacheHelper.PopulateDefaultAppTokenCache(app, atItem);
+                TokenCacheHelper.PopulateDefaultAppTokenCache(app, atItem);
 
                 TokenCacheAccessRecorder cacheAccess = app.AppTokenCache.RecordAccess();
 
@@ -339,10 +335,9 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
 
                 Trace.WriteLine("2. Configure AT so that it shows it needs to be refreshed");
 
-                TokenCacheHelper tokenCacheHelper = new TokenCacheHelper();
                 MsalAccessTokenCacheItem atItem = TokenCacheHelper.CreateAccessTokenItem();
                 UpdateATWithRefreshOn(atItem, DateTime.UtcNow - TimeSpan.FromMinutes(1));
-                tokenCacheHelper.PopulateDefaultAppTokenCache(app, atItem);
+                TokenCacheHelper.PopulateDefaultAppTokenCache(app, atItem);
 
                 TokenCacheAccessRecorder cacheAccess = app.AppTokenCache.RecordAccess();
 
@@ -367,10 +362,9 @@ namespace Microsoft.Identity.Test.Unit.PublicApiTests
             {
                 Trace.WriteLine("1. Setup an app with a token cache with one AT = expired and needs refersh");
                 ConfidentialClientApplication app = SetupCca(harness);
-                TokenCacheHelper tokenCacheHelper = new TokenCacheHelper();
                 var atItem = TokenCacheHelper.CreateAccessTokenItem();
                 UpdateATWithRefreshOn(atItem, DateTime.UtcNow - TimeSpan.FromMinutes(1), true);
-                tokenCacheHelper.PopulateDefaultAppTokenCache(app, atItem);
+                TokenCacheHelper.PopulateDefaultAppTokenCache(app, atItem);
 
                 TokenCacheAccessRecorder cacheAccess = app.AppTokenCache.RecordAccess();
 
